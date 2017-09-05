@@ -65,7 +65,7 @@ if os.path.isfile('../data/total_entropy.txt'):
 
 
 ### Subsystem Entropy
-fldat = open(pltfolder + 'ent_fluctuation.txt', 'w')
+fldat = open(pltfolder + 'ent_fluctuation_N'+str(sysVar.N)+'.txt', 'w')
 fldat.write('N_tot: %i\n' % sysVar.N)
 avg = np.mean(ent_array[loavgind:,1], dtype=np.float64)
 stddev = np.std(ent_array[loavgind:,1], dtype=np.float64)

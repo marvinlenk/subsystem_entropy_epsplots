@@ -100,7 +100,7 @@ print('.', end='', flush=True)
 
 ### Subsystems occupation numbers
 # store fluctuations in a data
-fldat = open(pltfolder + 'occ_fluctuation.txt', 'w')
+fldat = open(pltfolder + 'occ_fluctuation_N'+str(sysVar.N)+'.txt', 'w')
 fldat.write('N_tot: %i\n' % sysVar.N)
 tmp = np.zeros(len(step_array))
 for i in sysVar.kRed:
@@ -151,7 +151,7 @@ print('.', end='', flush=True)
 
 ### occupation number in levels against level index
 
-occavg = np.loadtxt(pltfolder + 'occ_fluctuation.txt', usecols=(1,))
+occavg = np.loadtxt(pltfolder + 'occ_fluctuation_N'+str(sysVar.N)+'.txt', usecols=(1,))
 plt.xlim(-0.1, sysVar.m - 0.9)
 for l in range(0, sysVar.m):
     plt.errorbar(l, occavg[int(7 + 3 * l)] / sysVar.N, xerr=None, yerr=occavg[int(8 + 3 * l)] / sysVar.N,
