@@ -1,0 +1,2 @@
+### 05.09.2017
+- added entropy eps plot and averaging

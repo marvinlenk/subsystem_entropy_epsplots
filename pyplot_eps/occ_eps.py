@@ -1,7 +1,7 @@
 import numpy as np
 import os
-import matplotlib as mpl
 from mpEntropy import mpSystem
+import matplotlib as mpl
 from matplotlib.pyplot import cm
 import matplotlib.pyplot as plt
 from scipy.signal import savgol_filter
@@ -20,6 +20,7 @@ if not os.path.exists(pltfolder):
 
 print("Plotting", end='')
 mpl.use('Agg')
+# styles and stuff
 avgstyle = 'dashed'
 avgsize = 0.6
 expectstyle = 'solid'
@@ -53,14 +54,14 @@ for i in range(0, sysVar.m):
     plt.plot(step_array, occ_array[:, i + 1], label=r'$n_' + str(i) + '$', linewidth=0.5)
     if sysVar.boolPlotAverages:
         tavg = savgol_filter(occ_array[:, i + 1], fwidth, ford)
-        plt.plot(step_array, tavg, linewidth=avgsize, linestyle=avgstyle, color='black')
+        plt.plot(step_array[loavgind:], tavg[loavgind:], linewidth=avgsize, linestyle=avgstyle, color='black')
 
 plt.ylabel(r'Occupation number')
 plt.xlabel(r'$J\,t$')
 plt.legend(loc='upper right')
 plt.grid()
 plt.tight_layout()
-plt.savefig(pltfolder+'occupation_single.eps', format='eps', dpi=1000)
+plt.savefig(pltfolder + 'occupation_single.eps', format='eps', dpi=1000)
 plt.clf()
 print('.', end='', flush=True)
 
@@ -69,14 +70,14 @@ for i in sysVar.kRed:
     plt.plot(step_array, occ_array[:, i + 1], label=r'$n_' + str(i) + '$', linewidth=0.6)
     if sysVar.boolPlotAverages:
         tavg = savgol_filter(occ_array[:, i + 1], fwidth, ford)
-        plt.plot(step_array, tavg, linewidth=avgsize, linestyle=avgstyle, color='black')
+        plt.plot(step_array[loavgind:], tavg[loavgind:], linewidth=avgsize, linestyle=avgstyle, color='black')
 
 plt.ylabel(r'Occupation number')
 plt.xlabel(r'$J\,t$')
 plt.legend(loc='lower right')
 plt.grid()
 plt.tight_layout()
-plt.savefig(pltfolder+'occupation_bath.eps', format='eps', dpi=1000)
+plt.savefig(pltfolder + 'occupation_bath.eps', format='eps', dpi=1000)
 plt.clf()
 print('.', end='', flush=True)
 
@@ -86,20 +87,20 @@ for i in np.arange(sysVar.m)[sysVar.mask]:
     plt.plot(step_array, occ_array[:, i + 1], label=r'$n_' + str(i) + '$', linewidth=0.6)
     if sysVar.boolPlotAverages:
         tavg = savgol_filter(occ_array[:, i + 1], fwidth, ford)
-        plt.plot(step_array, tavg, linewidth=avgsize, linestyle=avgstyle, color='black')
+        plt.plot(step_array[loavgind:], tavg[loavgind:], linewidth=avgsize, linestyle=avgstyle, color='black')
 
 plt.ylabel(r'Occupation number')
 plt.xlabel(r'$J\,t$')
 plt.legend(loc='lower right')
 plt.grid()
 plt.tight_layout()
-plt.savefig(pltfolder+'occupation_system.eps', format='eps', dpi=1000)
+plt.savefig(pltfolder + 'occupation_system.eps', format='eps', dpi=1000)
 plt.clf()
 print('.', end='', flush=True)
 
 ### Subsystems occupation numbers
 # store fluctuations in a data
-fldat = open(pltfolder+'fluctuation.txt', 'w')
+fldat = open(pltfolder + 'occ_fluctuation.txt', 'w')
 fldat.write('N_tot: %i\n' % sysVar.N)
 tmp = np.zeros(len(step_array))
 for i in sysVar.kRed:
@@ -123,7 +124,7 @@ plt.plot(step_array, tmp, label="system", linewidth=0.8, color='darkgreen')
 
 if sysVar.boolPlotAverages:
     tavg = savgol_filter(tmp, fwidth, ford)
-    plt.plot(step_array, tavg, linewidth=avgsize, linestyle=avgstyle, color='black')
+    plt.plot(step_array[loavgind:], tavg[loavgind:], linewidth=avgsize, linestyle=avgstyle, color='black')
 
 avg = np.mean(tmp[loavgind:], dtype=np.float64)
 stddev = np.std(tmp[loavgind:], dtype=np.float64)
@@ -144,13 +145,13 @@ plt.xlabel(r'$J\,t$')
 plt.legend(loc='upper right')
 plt.grid()
 plt.tight_layout()
-plt.savefig(pltfolder+'occupation_systems.eps', format='eps', dpi=1000)
+plt.savefig(pltfolder + 'occupation_systems.eps', format='eps', dpi=1000)
 plt.clf()
 print('.', end='', flush=True)
 
 ### occupation number in levels against level index
 
-occavg = np.loadtxt(pltfolder+'fluctuation.txt', usecols=(1,))
+occavg = np.loadtxt(pltfolder + 'occ_fluctuation.txt', usecols=(1,))
 plt.xlim(-0.1, sysVar.m - 0.9)
 for l in range(0, sysVar.m):
     plt.errorbar(l, occavg[int(7 + 3 * l)] / sysVar.N, xerr=None, yerr=occavg[int(8 + 3 * l)] / sysVar.N,
@@ -159,7 +160,7 @@ plt.ylabel(r'Relative level occupation')
 plt.xlabel(r'Level index')
 plt.grid()
 plt.tight_layout()
-plt.savefig(pltfolder+'occupation_distribution.eps', format='eps', dpi=1000)
+plt.savefig(pltfolder + 'occupation_distribution.eps', format='eps', dpi=1000)
 plt.clf()
 
 plt.xlim(np.min(np.arange(sysVar.m)[sysVar.mask]) - 0.1, np.max(np.arange(sysVar.m)[sysVar.mask]) + 0.1)
@@ -170,7 +171,7 @@ plt.ylabel(r'Relative level occupation')
 plt.xlabel(r'Level index')
 plt.grid()
 plt.tight_layout()
-plt.savefig(pltfolder+'occupation_distribution_sys.eps', format='eps', dpi=1000)
+plt.savefig(pltfolder + 'occupation_distribution_sys.eps', format='eps', dpi=1000)
 plt.clf()
 
 plt.xlim(np.min(sysVar.kRed) - 0.1, np.max(sysVar.kRed) + 0.1)
@@ -181,7 +182,7 @@ plt.ylabel(r'Relative level occupation')
 plt.xlabel(r'Level index')
 plt.grid()
 plt.tight_layout()
-plt.savefig(pltfolder+'occupation_distribution_bath.eps', format='eps', dpi=1000)
+plt.savefig(pltfolder + 'occupation_distribution_bath.eps', format='eps', dpi=1000)
 plt.clf()
 
 print(" done!")
