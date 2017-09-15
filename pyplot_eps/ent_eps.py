@@ -4,6 +4,8 @@ from mpEntropy import mpSystem
 import matplotlib as mpl
 from matplotlib.pyplot import cm
 import matplotlib.pyplot as plt
+import matplotlib.mlab as mlab
+from scipy.stats import norm
 from scipy.signal import savgol_filter
 # This is a workaround until scipy fixes the issue
 import warnings
@@ -48,7 +50,6 @@ ent_array = np.loadtxt('../data/entropy.txt')
 # multiply step array with time scale
 step_array = ent_array[:, 0] * sysVar.plotTimeScale
 
-
 #### Complete system Entropy
 if os.path.isfile('../data/total_entropy.txt'):
     totent_array = np.loadtxt('../data/total_entropy.txt')
@@ -63,18 +64,17 @@ if os.path.isfile('../data/total_entropy.txt'):
     plt.clf()
     print('.', end='', flush=True)
 
-
 ### Subsystem Entropy
-fldat = open(pltfolder + 'ent_fluctuation_N'+str(sysVar.N)+'.txt', 'w')
+fldat = open(pltfolder + 'ent_fluctuation_N' + str(sysVar.N) + '.txt', 'w')
 fldat.write('N_tot: %i\n' % sysVar.N)
-avg = np.mean(ent_array[loavgind:,1], dtype=np.float64)
-stddev = np.std(ent_array[loavgind:,1], dtype=np.float64)
+avg = np.mean(ent_array[loavgind:, 1], dtype=np.float64)
+stddev = np.std(ent_array[loavgind:, 1], dtype=np.float64)
 fldat.write('ssent_average: %.16e\n' % avg)
 fldat.write('ssent_stddev: %.16e\n' % stddev)
 fldat.write('ssent_rel._fluctuation: %.16e\n' % (stddev / avg))
 fldat.close()
 
-plt.plot(step_array, ent_array[:, 1], linewidth=0.8, color='r')
+plt.plot(step_array[loavgind:], ent_array[loavgind:, 1], linewidth=0.3, color='r')
 plt.grid()
 if sysVar.boolPlotAverages:
     tavg = savgol_filter(ent_array[:, 1], fwidth, ford)
@@ -83,6 +83,25 @@ plt.xlabel(r'$J\,t$')
 plt.ylabel('Subsystem entropy')
 plt.tight_layout()
 plt.savefig(pltfolder + 'entropy_subsystem.eps', format='eps', dpi=1000)
+plt.clf()
+print('.', end='', flush=True)
+
+# histogram of fluctuations
+n, bins, patches = plt.hist(ent_array[loavgind:, 1] - avg, 51, normed=1, rwidth=0.8, align='mid')
+(mu, sigma) = norm.fit(ent_array[loavgind:, 1] - avg)
+y = mlab.normpdf(bins, mu, sigma)
+l = plt.plot(bins, y, 'r--', linewidth=2)
+mu_magnitude = np.floor(np.log10(np.abs(mu)))
+mu /= np.power(10, mu_magnitude)
+sigma_magnitude = np.floor(np.log10(sigma))
+sigma /= np.power(10, sigma_magnitude)
+plt.figtext(0.92, 0.82,
+            '$\mu = %.2f \cdot 10^{%i}$\n$\sigma = %.2f \cdot 10^{%i}$' % (mu, mu_magnitude, sigma, sigma_magnitude),
+            ha='right', va='bottom', multialignment="left", bbox=dict(fc="none"))
+plt.xlabel(r'$S_{sub}$ fluctuation amplitude')
+plt.ylabel(r'Probability density')
+plt.tight_layout()
+plt.savefig(pltfolder + 'entropy_subsystem_fluctuations.eps', format='eps', dpi=1000)
 plt.clf()
 print('.', end='', flush=True)
 

@@ -1,3 +1,7 @@
+### 15.09.2017
+- added plot_all.sh for easy plotting of all the stuff
+- added en_eps.py for energy related plots
+
 ### 05.09.2017
 - added entropy eps plot and averaging
 - added default.ini to the files list so older datasets can be analyzed as well
