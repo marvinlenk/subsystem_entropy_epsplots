@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import matplotlib.mlab as mlab
 from scipy.stats import norm
 from scipy.signal import savgol_filter
+from scipy.optimize import curve_fit
 # This is a workaround until scipy fixes the issue
 import warnings
 
@@ -74,7 +75,7 @@ fldat.write('ssent_stddev: %.16e\n' % stddev)
 fldat.write('ssent_rel._fluctuation: %.16e\n' % (stddev / avg))
 fldat.close()
 
-plt.plot(step_array[loavgind:], ent_array[loavgind:, 1], linewidth=0.3, color='r')
+plt.plot(step_array[:], ent_array[:, 1], linewidth=0.3, color='r')
 plt.grid()
 if sysVar.boolPlotAverages:
     tavg = savgol_filter(ent_array[:, 1], fwidth, ford)
@@ -83,6 +84,28 @@ plt.xlabel(r'$J\,t$')
 plt.ylabel('Subsystem entropy')
 plt.tight_layout()
 plt.savefig(pltfolder + 'entropy_subsystem.eps', format='eps', dpi=1000)
+plt.clf()
+
+
+# Subsystem entropy with inlay
+# define fit function
+def logfit(x, a, b, c):
+    return a *np.log(x + b) + c
+
+max_time = 1.5
+max_ind = int(max_time / step_array[-1] * len(step_array))
+popt, pcov = curve_fit(logfit, step_array[:max_ind], ent_array[:max_ind, 1])
+print(popt, pcov)
+plt.plot(step_array[:], ent_array[:, 1], linewidth=0.3, color='r')
+if sysVar.boolPlotAverages:
+    tavg = savgol_filter(ent_array[:, 1], fwidth, ford)
+    plt.plot(step_array[loavgind:], tavg[loavgind:], linewidth=avgsize, linestyle=avgstyle, color='black')
+plt.xlabel(r'$J\,t$')
+plt.ylabel('Subsystem entropy')
+a = plt.axes([.5, .3, .4, .4])
+plt.plot(step_array[:max_ind], ent_array[:max_ind, 1], linewidth=0.3, color='r')
+plt.plot(step_array[:max_ind], logfit(step_array[:max_ind], *popt), color='grey', linewidth=0.3, linestyle='dashed', label='fit')
+plt.savefig(pltfolder + 'entropy_subsystem_inlay.eps', format='eps', dpi=1000)
 plt.clf()
 print('.', end='', flush=True)
 
