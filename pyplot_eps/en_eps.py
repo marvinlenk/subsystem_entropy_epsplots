@@ -25,6 +25,32 @@ avgstyle = 'dashed'
 avgsize = 0.6
 expectstyle = 'solid'
 expectsize = 1
+legend_size = 10
+font_size = 10
+# https://scipy.github.io/old-wiki/pages/Cookbook/Matplotlib/LaTeX_Examples.html
+fig_width_pt = 246.0  # Get this from LaTeX using \showthe\columnwidth
+inches_per_pt = 1.0 / 72.27  # Convert pt to inches
+golden_mean = (np.sqrt(5) - 1.0) / 2.0  # Aesthetic ratio
+fig_width = fig_width_pt * inches_per_pt  # width in inches
+fig_height = fig_width * golden_mean  # height in inches
+fig_size = [fig_width, fig_height]
+# padding in units of fontsize
+padding = 0.32
+
+params = {
+    'axes.labelsize': 10,
+    'font.size': 10,
+    'legend.fontsize': 10,
+    'xtick.labelsize': 8,
+    'ytick.labelsize': 8,
+    'lines.linewidth': 0.3,
+    'figure.figsize': fig_size,
+    'mathtext.default': 'rm'  # see http://matplotlib.org/users/customizing.html
+}
+plt.rcParams['agg.path.chunksize'] = 0
+plt.rcParams.update(params)
+plt.rc('text', usetex=True)
+plt.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
 
 loavgpercent = sysVar.plotLoAvgPerc  # percentage of time evolution to start averaging
 loavgind = int(loavgpercent * sysVar.dataPoints)  # index to start at when calculating average and stddev
@@ -32,17 +58,9 @@ loavgtime = np.round(loavgpercent * (sysVar.deltaT * sysVar.steps * sysVar.plotT
 
 if sysVar.boolPlotAverages:
     print(' with averaging from Jt=%.2f' % loavgtime, end='')
+
 fwidth = sysVar.plotSavgolFrame
 ford = sysVar.plotSavgolOrder
-params = {
-    'legend.fontsize': sysVar.plotLegendSize,
-    'font.size': sysVar.plotFontSize,
-    'mathtext.default': 'rm'  # see http://matplotlib.org/users/customizing.html
-}
-plt.rcParams['agg.path.chunksize'] = 0
-plt.rcParams.update(params)
-plt.rc('text', usetex=True)
-plt.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
 
 bool_eigenvalues = False  # plot eigenvalues and decomposition?
 if os.path.isfile('../data/hamiltonian_eigvals.txt'):
@@ -63,29 +81,34 @@ if bool_eigenvalues:
     energy_markersize = 0.7
     energy_barsize = 0.06
     if sysVar.dim != 1:
-        energy_markersize *= (2.0 / np.log10(sysVar.dim))
+        energy_markersize *= 2.0 / np.log10(sysVar.dim)
         energy_barsize *= (4.0 / np.log10(sysVar.dim))
-    ax1.plot(energy_array[:, 0], energy_array[:, 1], linestyle='none', marker='o', ms=energy_markersize, color='blue')
+    index_maximum = np.argmax(energy_array[:, 2])
+    ax1.plot(energy_array[:, 0], energy_array[:, 1], linestyle='none', marker='.', markersize=energy_markersize,
+             markeredgewidth=0, color='blue')
     ax1.set_ylabel(r'Energy / J')
     ax1.set_xlabel(r'Eigenvalue index $n$')
     plt.grid(False)
     ax1.set_xlim(xmin=-(len(energy_array[:, 0]) * (5.0 / 100)))
+    tmp_ticks = list(ax1.get_xticks())
+    tmp_ticks.pop(2)
+    ax1.set_xticks(tmp_ticks + [int(index_maximum)])
     if np.shape(energy_array)[0] > 2:
         ax2 = ax1.twinx()
         ax2.bar(energy_array[:, 0], energy_array[:, 2], alpha=0.8, color='red', width=energy_barsize, align='center')
         ax2.set_ylabel(r'$|c_n|^2$')
         # inlay with small region around maximum
-        ax_inlay = plt.axes([0.62, 0.6, 0.28, 0.28])
-        index_range = np.floor(sysVar.dim / 200)
-        index_maximum = np.amax(energy_array[:, 2])
+        ax_inlay = plt.axes([0.40, 0.65, 0.25, 0.28])
+        index_range = int(np.floor(sysVar.dim / 200))
         index_lo = index_maximum - index_range
         index_hi = index_maximum + index_range
         decomp_max = np.max(energy_array[index_lo:index_hi, 2])
-        decomp_min = np.min(energy_array[index_lo:index_hi, 2])
-        ax_inlay.bar(energy_array[index_lo:index_hi, 0], energy_array[index_lo:index_hi, 2], color='red', width=energy_barsize * 10, align='center')
+        decomp_min = np.min(energy_array[index_lo:index_hi, 2]) / decomp_max
+        ax_inlay.bar(energy_array[index_lo:index_hi, 0], energy_array[index_lo:index_hi, 2] / decomp_max, color='red',
+                     width=energy_barsize * 10, align='center')
         ax_inlay.set_xticks([energy_array[index_lo, 0], energy_array[index_hi, 0]])
-        ax_inlay.set_yticks([decomp_min,decomp_max])
-    plt.tight_layout()
+        ax_inlay.set_yticks([np.round(decomp_min), 1])
+    plt.tight_layout(padding)
     ###
     plt.savefig(pltfolder + 'energy_eigenvalues.eps', format='eps', dpi=1000)
     plt.clf()
@@ -97,7 +120,7 @@ if bool_eigenvalues:
     plt.ylabel(r'$|c_E|^2$')
     plt.grid(False)
     plt.xlim(xmin=-(np.abs(energy_array[0, 1] - energy_array[-1, 1]) * (5.0 / 100)))
-    plt.tight_layout()
+    plt.tight_layout(padding)
     ###
     plt.savefig(pltfolder + 'energy_decomposition.eps', format='eps', dpi=1000)
     plt.clf()
@@ -110,14 +133,13 @@ if bool_total:
     en0_magnitude = np.floor(np.log10(np.abs(en0)))
     en0 /= np.power(10, en0_magnitude)
     magnitude = np.floor(np.log10(np.max(np.abs(total_energy_array[:, 1]))))
-    plt.plot(total_energy_array[:, 0] * sysVar.plotTimeScale, total_energy_array[:, 1] / (np.power(10, magnitude)),
-             linewidth=0.6)
+    plt.plot(total_energy_array[:, 0] * sysVar.plotTimeScale, total_energy_array[:, 1] / (np.power(10, magnitude)))
     plt.figtext(0.9, 0.85, r'$E_0 / J = %.2f \cdot 10^{%i}$' % (en0, en0_magnitude), horizontalalignment='right',
                 verticalalignment='bottom')
     plt.ylabel(r'$E_{tot} - E_0 / (J \cdot 10^{%i})$' % magnitude)
     plt.xlabel(r'$J\,t$')
     plt.grid(False)
-    plt.tight_layout()
+    plt.tight_layout(padding)
     ###
     plt.savefig(pltfolder + 'energy_total.eps', format='eps', dpi=1000)
     plt.clf()

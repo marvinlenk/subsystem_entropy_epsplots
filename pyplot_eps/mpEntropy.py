@@ -46,7 +46,7 @@ class mpSystem:
             self.stateNorm = 0
             self.stateNormAbs = 0
             self.stateNormCheck = 1e1  # check if norm has been supressed too much
-            self.densityMatrix = []  # do not initialize yet - it wait until hamiltonian decomposition has been done for memory efficiency 
+            self.densityMatrix = []  # do not initialize yet - it wait until hamiltonian decomposition has been done for memory efficiency
             self.densityMatrixInd = False
             self.entropy = 0
             self.energy = 0
@@ -82,10 +82,10 @@ class mpSystem:
                 if self.occEnSingle > 0:
                     self.occEnInds = np.zeros((self.m, 2, self.occEnSingle), dtype=np.int16)
                     self.offDiagSingles = np.zeros((self.m, self.occEnSingle), dtype=self.datType)
-                    
+
             if self.boolOffDiagDens:
                 self.offDiagDens = 0
-            
+
             if self.mRedComp == 0:
                 self.dimRed = 0
                 self.offsetsRed = None
@@ -618,8 +618,8 @@ class mpSystem:
             self.updateEigenenergies()
             print("Hamiltonian diagonalized after " + time_elapsed(t0, 60, 0))
             t0 = tm.time()
-            
-            # decomposition in energy space       
+
+            # decomposition in energy space
             tfil = open('./data/hamiltonian_eigvals.txt', 'w')
             if self.boolDecompStore:
                 tmpAbsSq = np.zeros(self.dim)
@@ -627,12 +627,12 @@ class mpSystem:
                 # generate all overlaps at once
                 # note that conj() is optional since the vectors can be chosen to be real
                 tmp = np.dot(self.eigVects.T.conj(), self.state)
-                
+
                 # also calculate all occupation numbers at once
                 enoccs = np.zeros((self.m, self.dim))
                 for j in range(0, self.m):
                     enoccs[j] = np.diag( np.dot(self.eigVects.T.conj(), self.operators[j,j].dot(self.eigVects)) ).real
-                
+
                 for i in range(0, self.dim):
                     # absolute value of overlap
                     tmpAbsSq[i] = np.abs(tmp[i]) ** 2
@@ -641,7 +641,7 @@ class mpSystem:
                         tmpPhase = np.angle(tmp[i]) / (2 * np.pi)
                     else:
                         tmpPhase = 0
-                        
+
                     # occupation numbers of the eigenvalues
                     tfil.write('%i %.16e %.16e %.16e ' % (i, self.eigVals[i], tmpAbsSq[i], tmpPhase))
                     for j in range(0, self.m):
@@ -651,7 +651,7 @@ class mpSystem:
                 for i in range(0, self.dim):
                     tfil.write('%i %.16e\n' % (i, self.eigVals[i]))
             tfil.close()
-            
+
             # decomposition in fock space
             sfil = open('./data/state.txt', 'w')
             for i in range(0, self.dim):
@@ -682,9 +682,9 @@ class mpSystem:
                 # generate all overlaps at once
                 # note that conj() is optional since the vectors can be chosen to be real
                 self.enState = np.dot(self.eigVects.T.conj(), self.state)
-            
+
             if self.boolDiagExpStore:
-                # diagonals in expectation value    
+                # diagonals in expectation value
                 ethfil = open('./data/diagexpect.txt', 'w')
                 for i in range(0, self.m):
                     if self.boolOffDiag:
@@ -705,7 +705,7 @@ class mpSystem:
                     if not self.boolDiagExpStore:
                         # first store everything, later delete diagonal elements
                         self.offDiagMat[i] = np.dot(self.eigVects.T, self.operators[i, i].dot(eivectinv))
-                    
+
                     #now get the single off diagonals
                     tmpdiag = np.einsum('l,ll,l -> l', self.enState.conj(), self.offDiagMat[i], self.enState, optimize=True).real
                     for j in range(0, self.dim):
@@ -722,7 +722,7 @@ class mpSystem:
                     storeMatrix(np.dot(self.eigVects.T, self.operators[i, i].dot(eivectinv)),
                                 './data/occ' + str(i) + '.txt', absOnly=0, stre=True, stim=False, stabs=False)
             print("Occupation number matrices stored after " + time_elapsed(t0, 60, 1))
-            
+
         # now we remove the diagonal elements
         if self.boolOffDiag:
             for i in range(0, self.m):
@@ -738,7 +738,7 @@ class mpSystem:
                     # generate all overlaps at once
                     # note that conj() is optional since the vectors can be chosen to be real
                     self.enState = np.dot(self.eigVects.T.conj(), self.state)
-            
+
             # props to Warren Weckesser https://stackoverflow.com/questions/20825990/find-multiple-maximum-values-in-a-2d-array-fast
             # Get the indices for the largest `num_largest` values.
             num_largest = self.occEnSingle
@@ -774,7 +774,7 @@ class mpSystem:
 
         for i in range(0, self.m):
             self.offDiag[i] = np.vdot(self.enState, self.offDiagMat[i].dot(self.enState))
-            
+
             # check for imaginary part -> would give an indication for errors
             if self.offDiag[i].imag > 1e-6:
                 print('The offdiagonal expectation value has an imaginary part of ', self.offDiag[i].imag)
@@ -788,7 +788,7 @@ class mpSystem:
 
     def updateOffDiagDens(self):
         self.offDiagDens = (multi_dot([np.ones(self.dimRed), self.densityMatrixRed, np.ones(self.dimRed)]) - np.trace(self.densityMatrixRed)).real
-        
+
     def updateEntropy(self):
         self.entropy = 0
         for el in la.eigvalsh(self.densityMatrix, check_finite=False):
@@ -1007,7 +1007,7 @@ class mpSystem:
         for m in range(0, self.m):
             self.filOcc.write('%.16e ' % self.occNo[m])
         self.filOcc.write('\n')
-        
+
         if self.boolOffDiagDens:
             self.filOffDiagDens.write('%.16e %.16e \n' % (self.evolTime, self.offDiagDens))
 
@@ -1362,7 +1362,7 @@ def getQuadraticSpecHi(sysVar, l, m):
 
 
 # array elements are NO matrix! just numpy array!
-# This will take very long to create and use up much memory, please consider doing it on the fly only for needed elements.           
+# This will take very long to create and use up much memory, please consider doing it on the fly only for needed elements.
 def quarticArray(sysVar):
     retArr = np.empty((sysVar.m, sysVar.m, sysVar.m, sysVar.m), dtype=csr_matrix)
     # TODO: use transpose property
@@ -1375,7 +1375,7 @@ def quarticArray(sysVar):
 
 
 # array elements are NO matrix! just numpy array!
-# This will take very long to create and use up much memory, please consider doing it on the fly only for needed elements.           
+# This will take very long to create and use up much memory, please consider doing it on the fly only for needed elements.
 def quarticArrayRed(sysVar):
     retArr = np.empty((sysVar.mRed, sysVar.mRed, sysVar.mRed, sysVar.mRed), dtype=csr_matrix)
     # TODO: use transpose property

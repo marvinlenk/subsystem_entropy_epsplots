@@ -25,6 +25,32 @@ avgstyle = 'dashed'
 avgsize = 0.6
 expectstyle = 'solid'
 expectsize = 1
+legend_size = 10
+font_size = 10
+# https://scipy.github.io/old-wiki/pages/Cookbook/Matplotlib/LaTeX_Examples.html
+fig_width_pt = 246.0  # Get this from LaTeX using \showthe\columnwidth
+inches_per_pt = 1.0 / 72.27  # Convert pt to inches
+golden_mean = (np.sqrt(5) - 1.0) / 2.0  # Aesthetic ratio
+fig_width = fig_width_pt * inches_per_pt  # width in inches
+fig_height = fig_width * golden_mean  # height in inches
+fig_size = [fig_width, fig_height]
+# padding in units of fontsize
+padding = 0.32
+
+params = {
+    'axes.labelsize': 10,
+    'font.size': 10,
+    'legend.fontsize': 10,
+    'xtick.labelsize': 8,
+    'ytick.labelsize': 8,
+    'lines.linewidth': 0.3,
+    'figure.figsize': fig_size,
+    'mathtext.default': 'rm'  # see http://matplotlib.org/users/customizing.html
+}
+plt.rcParams['agg.path.chunksize'] = 0
+plt.rcParams.update(params)
+plt.rc('text', usetex=True)
+plt.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
 
 loavgpercent = sysVar.plotLoAvgPerc  # percentage of time evolution to start averaging
 loavgind = int(loavgpercent * sysVar.dataPoints)  # index to start at when calculating average and stddev
@@ -32,17 +58,9 @@ loavgtime = np.round(loavgpercent * (sysVar.deltaT * sysVar.steps * sysVar.plotT
 
 if sysVar.boolPlotAverages:
     print(' with averaging from Jt=%.2f' % loavgtime, end='')
+
 fwidth = sysVar.plotSavgolFrame
 ford = sysVar.plotSavgolOrder
-params = {
-    'legend.fontsize': sysVar.plotLegendSize,
-    'font.size': sysVar.plotFontSize,
-    'mathtext.default': 'rm'  # see http://matplotlib.org/users/customizing.html
-}
-plt.rcParams['agg.path.chunksize'] = 0
-plt.rcParams.update(params)
-plt.rc('text', usetex=True)
-plt.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
 
 occ_array = np.loadtxt('../data/occupation.txt')
 # multiply step array with time scale
@@ -51,32 +69,30 @@ step_array = occ_array[:, 0] * sysVar.plotTimeScale
 ### Single-level occupation numbers
 
 for i in range(0, sysVar.m):
-    plt.plot(step_array, occ_array[:, i + 1], label=r'$n_' + str(i) + '$', linewidth=0.5)
+    plt.plot(step_array, occ_array[:, i + 1], label=r'$n_' + str(i) + '$')
     if sysVar.boolPlotAverages:
         tavg = savgol_filter(occ_array[:, i + 1], fwidth, ford)
-        plt.plot(step_array[loavgind:], tavg[loavgind:], linewidth=avgsize, linestyle=avgstyle, color='black')
+        plt.plot(step_array[loavgind:], tavg[loavgind:], linestyle=avgstyle, color='black')
 
 plt.ylabel(r'Occupation number')
 plt.xlabel(r'$J\,t$')
 plt.legend(loc='upper right')
-plt.grid()
-plt.tight_layout()
+plt.tight_layout(padding)
 plt.savefig(pltfolder + 'occupation_single.eps', format='eps', dpi=1000)
 plt.clf()
 print('.', end='', flush=True)
 
 ### Traced out (bath) occupation numbers
 for i in sysVar.kRed:
-    plt.plot(step_array, occ_array[:, i + 1], label=r'$n_' + str(i) + '$', linewidth=0.6)
+    plt.plot(step_array, occ_array[:, i + 1], label=r'$n_' + str(i) + '$')
     if sysVar.boolPlotAverages:
         tavg = savgol_filter(occ_array[:, i + 1], fwidth, ford)
-        plt.plot(step_array[loavgind:], tavg[loavgind:], linewidth=avgsize, linestyle=avgstyle, color='black')
+        plt.plot(step_array[loavgind:], tavg[loavgind:], linestyle=avgstyle, color='black')
 
 plt.ylabel(r'Occupation number')
 plt.xlabel(r'$J\,t$')
-plt.legend(loc='lower right')
-plt.grid()
-plt.tight_layout()
+plt.legend(loc='upper right')
+plt.tight_layout(padding)
 plt.savefig(pltfolder + 'occupation_bath.eps', format='eps', dpi=1000)
 plt.clf()
 print('.', end='', flush=True)
@@ -84,32 +100,31 @@ print('.', end='', flush=True)
 ### Leftover (system) occupation numbers
 
 for i in np.arange(sysVar.m)[sysVar.mask]:
-    plt.plot(step_array, occ_array[:, i + 1], label=r'$n_' + str(i) + '$', linewidth=0.6)
+    plt.plot(step_array, occ_array[:, i + 1], label=r'$n_' + str(i) + '$')
     if sysVar.boolPlotAverages:
         tavg = savgol_filter(occ_array[:, i + 1], fwidth, ford)
-        plt.plot(step_array[loavgind:], tavg[loavgind:], linewidth=avgsize, linestyle=avgstyle, color='black')
+        plt.plot(step_array[loavgind:], tavg[loavgind:], linestyle=avgstyle, color='black')
 
 plt.ylabel(r'Occupation number')
 plt.xlabel(r'$J\,t$')
 plt.legend(loc='lower right')
-plt.grid()
-plt.tight_layout()
+plt.tight_layout(padding)
 plt.savefig(pltfolder + 'occupation_system.eps', format='eps', dpi=1000)
 plt.clf()
 print('.', end='', flush=True)
 
 ### Subsystems occupation numbers
 # store fluctuations in a data
-fldat = open(pltfolder + 'occ_fluctuation_N'+str(sysVar.N)+'.txt', 'w')
+fldat = open(pltfolder + 'occ_fluctuation_N' + str(sysVar.N) + '.txt', 'w')
 fldat.write('N_tot: %i\n' % sysVar.N)
 tmp = np.zeros(len(step_array))
 for i in sysVar.kRed:
     tmp += occ_array[:, i + 1]
-plt.plot(step_array, tmp, label="bath", linewidth=0.8, color='magenta')
+plt.plot(step_array, tmp, label="bath", color='magenta')
 
 if sysVar.boolPlotAverages:
     tavg = savgol_filter(tmp, fwidth, ford)
-    plt.plot(step_array[loavgind:], tavg[loavgind:], linewidth=avgsize, linestyle=avgstyle, color='black')
+    plt.plot(step_array[loavgind:], tavg[loavgind:], linestyle=avgstyle, color='black')
 
 avg = np.mean(tmp[loavgind:], dtype=np.float64)
 stddev = np.std(tmp[loavgind:], dtype=np.float64)
@@ -120,11 +135,11 @@ fldat.write('bath_rel._fluctuation: %.16e\n' % (stddev / avg))
 tmp.fill(0)
 for i in np.arange(sysVar.m)[sysVar.mask]:
     tmp += occ_array[:, i + 1]
-plt.plot(step_array, tmp, label="system", linewidth=0.8, color='darkgreen')
+plt.plot(step_array, tmp, label="system", color='darkgreen')
 
 if sysVar.boolPlotAverages:
     tavg = savgol_filter(tmp, fwidth, ford)
-    plt.plot(step_array[loavgind:], tavg[loavgind:], linewidth=avgsize, linestyle=avgstyle, color='black')
+    plt.plot(step_array[loavgind:], tavg[loavgind:], linestyle=avgstyle, color='black')
 
 avg = np.mean(tmp[loavgind:], dtype=np.float64)
 stddev = np.std(tmp[loavgind:], dtype=np.float64)
@@ -143,23 +158,21 @@ fldat.close()
 plt.ylabel(r'Occupation number')
 plt.xlabel(r'$J\,t$')
 plt.legend(loc='upper right')
-plt.grid()
-plt.tight_layout()
+plt.tight_layout(padding)
 plt.savefig(pltfolder + 'occupation_systems.eps', format='eps', dpi=1000)
 plt.clf()
 print('.', end='', flush=True)
 
 ### occupation number in levels against level index
 
-occavg = np.loadtxt(pltfolder + 'occ_fluctuation_N'+str(sysVar.N)+'.txt', usecols=(1,))
+occavg = np.loadtxt(pltfolder + 'occ_fluctuation_N' + str(sysVar.N) + '.txt', usecols=(1,))
 plt.xlim(-0.1, sysVar.m - 0.9)
 for l in range(0, sysVar.m):
     plt.errorbar(l, occavg[int(7 + 3 * l)] / sysVar.N, xerr=None, yerr=occavg[int(8 + 3 * l)] / sysVar.N,
                  marker='o', color=cm.Set1(0))
 plt.ylabel(r'Relative level occupation')
 plt.xlabel(r'Level index')
-plt.grid()
-plt.tight_layout()
+plt.tight_layout(padding)
 plt.savefig(pltfolder + 'occupation_distribution.eps', format='eps', dpi=1000)
 plt.clf()
 
@@ -169,8 +182,7 @@ for l in np.arange(sysVar.m)[sysVar.mask]:
                  marker='o', color=cm.Set1(0))
 plt.ylabel(r'Relative level occupation')
 plt.xlabel(r'Level index')
-plt.grid()
-plt.tight_layout()
+plt.tight_layout(padding)
 plt.savefig(pltfolder + 'occupation_distribution_sys.eps', format='eps', dpi=1000)
 plt.clf()
 
@@ -180,8 +192,7 @@ for l in sysVar.kRed:
                  marker='o', color=cm.Set1(0))
 plt.ylabel(r'Relative level occupation')
 plt.xlabel(r'Level index')
-plt.grid()
-plt.tight_layout()
+plt.tight_layout(padding)
 plt.savefig(pltfolder + 'occupation_distribution_bath.eps', format='eps', dpi=1000)
 plt.clf()
 
