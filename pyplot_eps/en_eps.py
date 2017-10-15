@@ -86,13 +86,14 @@ if bool_eigenvalues:
     index_maximum = np.argmax(energy_array[:, 2])
     ax1.plot(energy_array[:, 0], energy_array[:, 1], linestyle='none', marker='.', markersize=energy_markersize,
              markeredgewidth=0, color='blue')
-    ax1.set_ylabel(r'Energy / J')
-    ax1.set_xlabel(r'Eigenvalue index $n$')
+    ax1.set_ylabel(r'E / J')
+    ax1.set_xlabel(r'Index $n$')
     plt.grid(False)
     ax1.set_xlim(xmin=-(len(energy_array[:, 0]) * (5.0 / 100)))
     tmp_ticks = list(ax1.get_xticks())
     tmp_ticks.pop(2)
     ax1.set_xticks(tmp_ticks + [int(index_maximum)])
+    plt.tight_layout(padding)
     if np.shape(energy_array)[0] > 2:
         ax2 = ax1.twinx()
         ax2.bar(energy_array[:, 0], energy_array[:, 2], alpha=0.8, color='red', width=energy_barsize, align='center')
@@ -108,19 +109,40 @@ if bool_eigenvalues:
                      width=energy_barsize * 10, align='center')
         ax_inlay.set_xticks([energy_array[index_lo, 0], energy_array[index_hi, 0]])
         ax_inlay.set_yticks([np.round(decomp_min), 1])
-    plt.tight_layout(padding)
     ###
     plt.savefig(pltfolder + 'energy_eigenvalues.eps', format='eps', dpi=1000)
     plt.clf()
     print('.', end='', flush=True)
 
     # Eigenvalue decomposition with energy x-axis
-    plt.bar(energy_array[:, 1], energy_array[:, 2], alpha=0.8, color='red', width=energy_barsize, align='center')
-    plt.xlabel(r'Energy / J')
+    for i in range(0, len(energy_array)):
+        if energy_array[i, 2]/np.max(energy_array[:, 2]) > 0.01:
+            lo_en_ind = i
+            break
+
+    for i in range(0, len(energy_array)):
+        if energy_array[-i, 2]/np.max(energy_array[:, 2]) > 0.01:
+            hi_en_ind = len(energy_array) - i
+            break
+
+    index_maximum = np.argmax(energy_array[:, 2])
+
+    plt.bar(energy_array[lo_en_ind:hi_en_ind, 1], energy_array[lo_en_ind:hi_en_ind, 2], alpha=0.8, color='red',
+            width=energy_barsize, align='center')
+    plt.xlabel(r'E / J')
     plt.ylabel(r'$|c_E|^2$')
     plt.grid(False)
-    plt.xlim(xmin=-(np.abs(energy_array[0, 1] - energy_array[-1, 1]) * (5.0 / 100)))
     plt.tight_layout(padding)
+    ax_inlay = plt.axes([0.60, 0.65, 0.3, 0.3])
+    index_range = int(np.floor(sysVar.dim / 200))
+    index_lo = index_maximum - index_range
+    index_hi = index_maximum + index_range
+    decomp_max = np.max(energy_array[index_lo:index_hi, 2])
+    decomp_min = np.min(energy_array[index_lo:index_hi, 2]) / decomp_max
+    ax_inlay.bar(energy_array[index_lo:index_hi, 1], energy_array[index_lo:index_hi, 2] / decomp_max, color='red',
+                 width=energy_barsize, align='center')
+    ax_inlay.set_xticks([np.round(energy_array[index_lo, 1],1), np.round(energy_array[index_hi, 1],1)])
+    ax_inlay.set_yticks([np.round(decomp_min), 1])
     ###
     plt.savefig(pltfolder + 'energy_decomposition.eps', format='eps', dpi=1000)
     plt.clf()

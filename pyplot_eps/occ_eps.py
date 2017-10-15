@@ -20,6 +20,13 @@ if not os.path.exists(pltfolder):
 
 print("Plotting", end='')
 mpl.use('Agg')
+# minimum and maximum times to plot
+min_time = 0
+max_time = 10
+inlay_min_time = 10
+inlay_max_time = 100
+inlay_log_min_time = 0
+inlay_log_max_time = 20
 # styles and stuff
 avgstyle = 'dashed'
 avgsize = 0.6
@@ -43,7 +50,7 @@ params = {
     'legend.fontsize': 10,
     'xtick.labelsize': 8,
     'ytick.labelsize': 8,
-    'lines.linewidth': 0.3,
+    'lines.linewidth': 0.7,
     'figure.figsize': fig_size,
     'mathtext.default': 'rm'  # see http://matplotlib.org/users/customizing.html
 }
@@ -65,52 +72,147 @@ ford = sysVar.plotSavgolOrder
 occ_array = np.loadtxt('../data/occupation.txt')
 # multiply step array with time scale
 step_array = occ_array[:, 0] * sysVar.plotTimeScale
+min_index = int(min_time / step_array[-1] * len(step_array))
+max_index = int(max_time / step_array[-1] * len(step_array))
+inlay_min_index = int(inlay_min_time / step_array[-1] * len(step_array))
+inlay_max_index = int(inlay_max_time / step_array[-1] * len(step_array))
+inlay_log_min_index = int(inlay_log_min_time / step_array[-1] * len(step_array))
+inlay_log_max_index = int(inlay_log_max_time / step_array[-1] * len(step_array))
 
 ### Single-level occupation numbers
 
 for i in range(0, sysVar.m):
-    plt.plot(step_array, occ_array[:, i + 1], label=r'$n_' + str(i) + '$')
+    plt.plot(step_array[min_index:max_index], occ_array[min_index:max_index, i + 1], label=r'$n_' + str(i) + '$')
     if sysVar.boolPlotAverages:
         tavg = savgol_filter(occ_array[:, i + 1], fwidth, ford)
         plt.plot(step_array[loavgind:], tavg[loavgind:], linestyle=avgstyle, color='black')
 
-plt.ylabel(r'Occupation number')
+plt.ylabel(r'$\langle n \rangle$')
 plt.xlabel(r'$J\,t$')
 plt.legend(loc='upper right')
 plt.tight_layout(padding)
 plt.savefig(pltfolder + 'occupation_single.eps', format='eps', dpi=1000)
 plt.clf()
+
+# with inlay
+f = plt.figure(1)
+a1 = plt.subplot(1, 1, 1)
+for i in range(0, sysVar.m):
+    a1.plot(step_array[min_index:max_index], occ_array[min_index:max_index, i + 1], label=r'$n_' + str(i) + '$')
+    if sysVar.boolPlotAverages:
+        tavg = savgol_filter(occ_array[:, i + 1], fwidth, ford)
+        plt.plot(step_array[loavgind:], tavg[loavgind:], linestyle=avgstyle, color='black')
+    a2 = plt.axes([.3, .575, .4, .35])
+    a2.plot(step_array[inlay_min_index:inlay_max_index], occ_array[inlay_min_index:inlay_max_index, i + 1],
+            linewidth=0.2)
+    a2.yaxis.tick_right()
+
+tmp_ticks = list(a2.get_xticks())
+tmp_ticks.pop(0)
+tmp_ticks.pop(0)
+tmp_ticks.pop(1)
+if tmp_ticks[-1] >= inlay_max_time:
+    tmp_ticks.pop(-1)
+    if tmp_ticks[-1] < inlay_max_time or len(tmp_ticks) == 0:
+        tmp_ticks = tmp_ticks + [inlay_max_time]
+a2.set_xticks(tmp_ticks + [inlay_min_time])
+a1.set_ylabel(r'$\langle n \rangle$')
+a1.set_xlabel(r'$J\,t$')
+a1.legend(loc='upper right')
+f.savefig(pltfolder + 'occupation_single_inlay.eps', format='eps', dpi=1000)
+f.clf()
 print('.', end='', flush=True)
 
 ### Traced out (bath) occupation numbers
 for i in sysVar.kRed:
-    plt.plot(step_array, occ_array[:, i + 1], label=r'$n_' + str(i) + '$')
+    plt.plot(step_array[min_index:max_index], occ_array[min_index:max_index, i + 1], label=r'$n_' + str(i) + '$',
+             color='C%i' % i)
     if sysVar.boolPlotAverages:
         tavg = savgol_filter(occ_array[:, i + 1], fwidth, ford)
         plt.plot(step_array[loavgind:], tavg[loavgind:], linestyle=avgstyle, color='black')
 
-plt.ylabel(r'Occupation number')
+plt.ylabel(r'$\langle n \rangle$')
 plt.xlabel(r'$J\,t$')
 plt.legend(loc='upper right')
 plt.tight_layout(padding)
 plt.savefig(pltfolder + 'occupation_bath.eps', format='eps', dpi=1000)
 plt.clf()
+
+# with inlay
+f = plt.figure(1)
+a1 = plt.subplot(1, 1, 1)
+a1.set_ylabel(r'$\langle n \rangle$')
+a1.set_xlabel(r'$J\,t$')
+plt.tight_layout(padding)
+for i in sysVar.kRed:
+    a1.plot(step_array[min_index:max_index], occ_array[min_index:max_index, i + 1], label=r'$n_' + str(i) + '$',
+            color='C%i' % i)
+    if sysVar.boolPlotAverages:
+        tavg = savgol_filter(occ_array[:, i + 1], fwidth, ford)
+        plt.plot(step_array[loavgind:], tavg[loavgind:], linestyle=avgstyle, color='black')
+    a2 = plt.axes([.27, .575, .4, .35])
+    a2.plot(step_array[inlay_min_index:inlay_max_index], occ_array[inlay_min_index:inlay_max_index, i + 1],
+            linewidth=0.2, color='C%i' % i)
+    a2.yaxis.tick_right()
+
+tmp_ticks = list(a2.get_xticks())
+tmp_ticks.pop(0)
+tmp_ticks.pop(0)
+tmp_ticks.pop(1)
+if tmp_ticks[-1] >= inlay_max_time:
+    tmp_ticks.pop(-1)
+    if tmp_ticks[-1] < inlay_max_time or len(tmp_ticks) == 0:
+        tmp_ticks = tmp_ticks + [inlay_max_time]
+a2.set_xticks(tmp_ticks + [inlay_min_time])
+a1.legend(loc='upper right')
+f.savefig(pltfolder + 'occupation_bath_inlay.eps', format='eps', dpi=1000)
+f.clf()
 print('.', end='', flush=True)
 
 ### Leftover (system) occupation numbers
 
 for i in np.arange(sysVar.m)[sysVar.mask]:
-    plt.plot(step_array, occ_array[:, i + 1], label=r'$n_' + str(i) + '$')
+    plt.plot(step_array[min_index:max_index], occ_array[min_index:max_index, i + 1], label=r'$n_' + str(i) + '$',
+             color='C%i' % i)
     if sysVar.boolPlotAverages:
         tavg = savgol_filter(occ_array[:, i + 1], fwidth, ford)
         plt.plot(step_array[loavgind:], tavg[loavgind:], linestyle=avgstyle, color='black')
 
-plt.ylabel(r'Occupation number')
+plt.ylabel(r'$\langle n \rangle$')
 plt.xlabel(r'$J\,t$')
 plt.legend(loc='lower right')
-plt.tight_layout(padding)
+plt.tight_layout(padding+0.4)
 plt.savefig(pltfolder + 'occupation_system.eps', format='eps', dpi=1000)
 plt.clf()
+
+# with inlay
+f = plt.figure(1)
+a1 = plt.subplot(1, 1, 1)
+for i in np.arange(sysVar.m)[sysVar.mask]:
+    a1.plot(step_array[min_index:max_index], occ_array[min_index:max_index, i + 1], label=r'$n_' + str(i) + '$',
+            color='C%i' % i)
+    if sysVar.boolPlotAverages:
+        tavg = savgol_filter(occ_array[:, i + 1], fwidth, ford)
+        plt.plot(step_array[loavgind:], tavg[loavgind:], linestyle=avgstyle, color='black')
+    a2 = plt.axes([.3, .275, .4, .35])
+    a2.plot(step_array[inlay_min_index:inlay_max_index], occ_array[inlay_min_index:inlay_max_index, i + 1],
+            linewidth=0.2, color='C%i' % i)
+    a2.yaxis.tick_right()
+
+tmp_ticks = list(a2.get_xticks())
+tmp_ticks.pop(0)
+tmp_ticks.pop(0)
+tmp_ticks.pop(1)
+if tmp_ticks[-1] >= inlay_max_time:
+    tmp_ticks.pop(-1)
+    if tmp_ticks[-1] < inlay_max_time or len(tmp_ticks) == 0:
+        tmp_ticks = tmp_ticks + [inlay_max_time]
+a2.set_xticks(tmp_ticks + [inlay_min_time])
+a1.set_ylabel(r'$\langle n \rangle$')
+a1.set_xlabel(r'$J\,t$')
+a1.legend(loc='lower right')
+f.savefig(pltfolder + 'occupation_system_inlay.eps', format='eps', dpi=1000)
+f.clf()
 print('.', end='', flush=True)
 
 ### Subsystems occupation numbers
@@ -120,7 +222,7 @@ fldat.write('N_tot: %i\n' % sysVar.N)
 tmp = np.zeros(len(step_array))
 for i in sysVar.kRed:
     tmp += occ_array[:, i + 1]
-plt.plot(step_array, tmp, label="bath", color='magenta')
+plt.plot(step_array[min_index:max_index], tmp[min_index:max_index], label="bath", color='magenta')
 
 if sysVar.boolPlotAverages:
     tavg = savgol_filter(tmp, fwidth, ford)
@@ -135,7 +237,7 @@ fldat.write('bath_rel._fluctuation: %.16e\n' % (stddev / avg))
 tmp.fill(0)
 for i in np.arange(sysVar.m)[sysVar.mask]:
     tmp += occ_array[:, i + 1]
-plt.plot(step_array, tmp, label="system", color='darkgreen')
+plt.plot(step_array[min_index:max_index], tmp[min_index:max_index], label="system", color='darkgreen')
 
 if sysVar.boolPlotAverages:
     tavg = savgol_filter(tmp, fwidth, ford)
@@ -155,7 +257,7 @@ for i in range(sysVar.m):
     fldat.write('n%i_rel._fluctuation: %.16e\n' % (i, (stddev / avg)))
 fldat.close()
 
-plt.ylabel(r'Occupation number')
+plt.ylabel(r'$\langle n \rangle$')
 plt.xlabel(r'$J\,t$')
 plt.legend(loc='upper right')
 plt.tight_layout(padding)
