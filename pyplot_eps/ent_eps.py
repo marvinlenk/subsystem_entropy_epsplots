@@ -25,11 +25,11 @@ print("Plotting", end='')
 mpl.use('Agg')
 # minimum and maximum times to plot
 min_time = 0
-max_time = 10
+max_time = 3
 inlay_min_time = 10
 inlay_max_time = 100
 inlay_log_min_time = 0
-inlay_log_max_time = 20
+inlay_log_max_time = 3
 # styles and stuff
 avgstyle = 'dashed'
 avgsize = 0.6
@@ -55,6 +55,8 @@ params = {
     'ytick.labelsize': 8,
     'lines.linewidth': 1,
     'figure.figsize': fig_size,
+    'legend.frameon': False,
+    'legend.loc': 'best',
     'mathtext.default': 'rm'  # see http://matplotlib.org/users/customizing.html
 }
 plt.rcParams['agg.path.chunksize'] = 0

@@ -22,7 +22,7 @@ print("Plotting", end='')
 mpl.use('Agg')
 # minimum and maximum times to plot
 min_time = 0
-max_time = 10
+max_time = 30
 inlay_min_time = 10
 inlay_max_time = 100
 inlay_log_min_time = 0
@@ -52,6 +52,8 @@ params = {
     'ytick.labelsize': 8,
     'lines.linewidth': 0.7,
     'figure.figsize': fig_size,
+    'legend.frameon': False,
+    'legend.loc': 'best',
     'mathtext.default': 'rm'  # see http://matplotlib.org/users/customizing.html
 }
 plt.rcParams['agg.path.chunksize'] = 0
@@ -92,6 +94,19 @@ plt.xlabel(r'$J\,t$')
 plt.legend(loc='upper right')
 plt.tight_layout(padding)
 plt.savefig(pltfolder + 'occupation_single.eps', format='eps', dpi=1000)
+plt.clf()
+
+### Single-level occupation number difference to mean
+
+for i in range(0, sysVar.m):
+    plt.semilogy(step_array[min_index:max_index], np.abs(occ_array[min_index:max_index, i + 1] - np.average(occ_array[loavgind:, i + 1]))*np.exp(-i*2.1))
+
+plt.ylabel(r'$| \bar{\langle n \rangle} - \langle n \rangle|$')
+plt.xlabel(r'$J\,t$')
+plt.ylim(ymin=1e-6, ymax=5e0)
+plt.yticks([])
+plt.tight_layout(padding)
+plt.savefig(pltfolder + 'occupation_single_difftomean.eps', format='eps', dpi=1000)
 plt.clf()
 
 # with inlay

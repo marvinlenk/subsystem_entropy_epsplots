@@ -45,6 +45,8 @@ params = {
     'ytick.labelsize': 8,
     'lines.linewidth': 0.3,
     'figure.figsize': fig_size,
+    'legend.frameon': False,
+    'legend.loc': 'best',
     'mathtext.default': 'rm'  # see http://matplotlib.org/users/customizing.html
 }
 plt.rcParams['agg.path.chunksize'] = 0
@@ -126,19 +128,18 @@ if bool_eigenvalues:
             break
 
     index_maximum = np.argmax(energy_array[:, 2])
-
-    plt.bar(energy_array[lo_en_ind:hi_en_ind, 1], energy_array[lo_en_ind:hi_en_ind, 2], alpha=0.8, color='red',
-            width=energy_barsize, align='center')
-    plt.xlabel(r'E / J')
-    plt.ylabel(r'$|c_E|^2$')
-    plt.grid(False)
-    plt.tight_layout(padding)
-    ax_inlay = plt.axes([0.60, 0.65, 0.3, 0.3])
     index_range = int(np.floor(sysVar.dim / 200))
     index_lo = index_maximum - index_range
     index_hi = index_maximum + index_range
     decomp_max = np.max(energy_array[index_lo:index_hi, 2])
     decomp_min = np.min(energy_array[index_lo:index_hi, 2]) / decomp_max
+
+    plt.bar(energy_array[lo_en_ind:hi_en_ind, 1], energy_array[lo_en_ind:hi_en_ind, 2]/decomp_max, alpha=0.8,
+            color='red', width=energy_barsize, align='center')
+    plt.xlabel(r'E / J')
+    plt.ylabel(r'$|c_E|^2 / \max(|c_E|^2)$')
+    plt.tight_layout(padding)
+    ax_inlay = plt.axes([0.60, 0.65, 0.3, 0.3])
     ax_inlay.bar(energy_array[index_lo:index_hi, 1], energy_array[index_lo:index_hi, 2] / decomp_max, color='red',
                  width=energy_barsize, align='center')
     ax_inlay.set_xticks([np.round(energy_array[index_lo, 1],1), np.round(energy_array[index_hi, 1],1)])
